@@ -1,45 +1,122 @@
 import React, { useReducer } from 'react'
-
-function App() {
-
-
-  // 1. Definition de la variable : 
-  const monVariable = { count : 0}; 
+import { useState } from 'react'
 
 
-  // 3. Définir la fonction reduce 
-  function reducer (state, action ) {
+export default function App() {
 
-    switch(action.type){
+  // ******************** S T A T E *****************
 
-      case "increment":
-        return { count : state.count + 1};
-      
-      case "decrement":
-        return { count : state.count - 1};
-      default:
-        return { count : false}
-
+    // ********* 1 definir la variable 
+    const initial= {
+      personnes : [] //********* on met un tableaux vide dans l'attribut personnes, donc on peut y acceder avec state.personnes
     }
+
+    // ***************** 2 useReducer 
+    const [state, dispatch]= useReducer(reducer, initial)
+
+    // **************** 3 la fonction 
+    function reducer (state, action){
+
+      switch(action.type)
+      {
+        case "add":
+          return {
+            ...state, // on copier le state 
+            personnes : 
+                [...state.personnes, // on copier le personnes actuelles
+                  action.playload  // on enregistre le nouveaux, dans le playload 
+                ]
+          }
+        case "delete": 
+          return {
+            ...state,
+            personnes : [...state.personnes.filter((personne)=> personne.id != action.playload)]
+          }
+
+        default :
+          return null
+      }
+    }
+
+
+    // **********recuperation des datas 
+    const [nom, setNom]= useState("");
+    const [age, setAge]= useState(15);
+
+
+  // *****************************C O M P O R T E M E N T *******
+
+  // *************ajouté 
+  const handleSubmit = (e)=>{
+    e.preventDefault();
+
+    // ********** voir si age et nom existe 
+    let id = Date.now();
+    if( nom && age )
+    {
+      dispatch ({
+        type: "add", //********on choisi le add 
+        playload: {nom,age,id} //on recupere les nom et age et onles met dans playload
+      })
+    }
+
+    // ********nettoyage 
+    setNom('');
+    setAge(15);
   }
 
-  // 2. Definir le useReducer 
-  const [state, dispatch]= useReducer(reducer, monVariable);
+  // **********delete 
+  const handleDelete = (id) =>{
+    
+    dispatch(
+      {
+        type:"delete",
+        playload: id
+      }
+    )
+  }
 
 
+  // ****************** ***************** A F F I C H A G E ***********
   return (
     <div>
+      <form onSubmit={(event)=>handleSubmit(event)}>
+        
+        <input 
+        type="text" name="" id="" placeholder='nom' 
 
-      <h2>{state.count}</h2>
+          value={nom} 
+          onChange={(e)=> setNom(e.target.value)}
+
+        />
+
+        <input type="number" name="" id="" placeholder='age' 
+
+          value={age} 
+          onChange={(e)=> setAge(e.target.value)}
+
+        />
+
+        <button type="submit">+</button>
+      </form>
 
       <br/>
+      <br/>
+      <br/>
 
-      {/* ******************** 3  apple  */}
-      <button onClick={() => dispatch({ type: "increment"})}>Increment </button>  <br/> <br/>
+      <div>
+        {
+          state.personnes.map((personne)=>(
 
-      <button onClick={() => dispatch({ type: "decrement"})}>Decrement </button>
+            <h2 key={personne.id}>
+              {personne.nom}  avec  {personne.age} ans 
+
+              <button onClick={()=>handleDelete(personne.id)}>X</button>
+
+            </h2>
+          ))
+        }
+      </div>
     </div>
   )
 }
-
-export default App
