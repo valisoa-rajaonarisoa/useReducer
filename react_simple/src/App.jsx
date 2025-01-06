@@ -1,11 +1,12 @@
-import React, { useReducer } from 'react'
+import axios from 'axios';
+import React, { act, useEffect, useReducer } from 'react'
 import { useState } from 'react'
 
 
 export default function App() {
 
   // ******************** S T A T E *****************
-
+ 
     // ********* 1 definir la variable 
     const initial= {
       personnes : [] //********* on met un tableaux vide dans l'attribut personnes, donc on peut y acceder avec state.personnes
@@ -19,6 +20,14 @@ export default function App() {
 
       switch(action.type)
       {
+
+        case "get":
+          return {
+            ...state,
+            personnes : action.playload // reuperation des datas dans le playpload 
+          }
+
+        
         case "add":
           return {
             ...state, // on copier le state 
@@ -50,13 +59,23 @@ export default function App() {
   const handleSubmit = (e)=>{
     e.preventDefault();
 
-    // ********** voir si age et nom existe 
-    let id = Date.now();
     if( nom && age )
     {
+      // *************requette envoyer au server 
+      const add = async()=>{
+        try{
+          await axios.post("http://localhost:4000/personne",{nom,age})
+        }catch(error){
+          console.log(error)
+        }
+      }
+
+      add();
+
+      // *****************juste on l'a besoin pour l'affichage 
       dispatch ({
         type: "add", //********on choisi le add 
-        playload: {nom,age,id} //on recupere les nom et age et onles met dans playload
+        playload: {nom,age} //on recupere les nom et age et onles met dans playload
       })
     }
 
@@ -68,6 +87,15 @@ export default function App() {
   // **********delete 
   const handleDelete = (id) =>{
     
+    const personDelete = async()=>{
+      try{
+        await axios.delete(`http://localhost:4000/personne/${id}`)
+      }catch(error){
+        console.log(error)
+      }
+    }
+
+    personDelete();
     dispatch(
       {
         type:"delete",
@@ -76,12 +104,33 @@ export default function App() {
     )
   }
 
+  // *************** get 
+  const getPersonnes= async()=>{
+    try{
+      const personnesServer= await axios.get("http://localhost:4000/personne")
+      // ************on appelle de dispatch 
+      dispatch(
+        {
+          type:"get", //on choisi le get 
+          playload: personnesServer.data //mettre dans le playload le data 
+        }
+      )
+    }catch(error)
+    {
+      console.log("une errer lors de la recuperation des personnes ",error)
+    }
+  }
+
+  // *** un peu de useEffect 
+  useEffect(()=>{
+    getPersonnes();
+  },[])
 
   // ****************** ***************** A F F I C H A G E ***********
   return (
     <div>
       <form onSubmit={(event)=>handleSubmit(event)}>
-        
+
         <input 
         type="text" name="" id="" placeholder='nom' 
 
